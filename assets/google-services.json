@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "533861704598",
+    "project_id": "zip-tasker",
+    "storage_bucket": "zip-tasker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:533861704598:android:b15a1939491d0f5176f3b7",
+        "android_client_info": {
+          "package_name": "com.alpha.ziptasker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAla8ykZ_GUQlNcMNcob42vpyvj9SL9xs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
