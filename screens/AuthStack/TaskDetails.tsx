@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useLayoutEffect } from "react";
 import {
   Animated,
   Easing,
@@ -36,8 +36,16 @@ import { FlatButton } from "../../components/Buttons/FlatButton";
 import { ThemedPicker } from "../../components/ThemedPicker";
 import { ThemedGradientView } from "../../components/ThemedGradientView";
 import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
+import { ThemedEvilIcons } from "../../components/ThemedEvilicons";
+import { UserDetails } from "../../components/UserDetails";
+import { ThemedMaterialCommunityIcons } from "../../components/ThemedMaterialCommunityIcon";
+import { PrimaryInput } from "../../components/PrimaryInput";
+import { ChatComponent } from "../../components/ChatComponent";
 
 type TaskDetailsRouteProp = RouteProp<TaskDetailsStackParamList, "taskDetails">;
+const HEADER_MAX_HEIGHT = getWidthnHeight(40)?.width!; // Max header height
+const HEADER_MIN_HEIGHT = getWidthnHeight(40)?.width!; // Min header height after scrolling
+const HEADER_SCROLL_DISTANCE = HEADER_MAX_HEIGHT - HEADER_MIN_HEIGHT;
 
 const TaskDetails: React.FC = () => {
   const theme = useColorScheme() ?? "light";
@@ -45,10 +53,13 @@ const TaskDetails: React.FC = () => {
   const navigation = useNavigation<BrowseStackNavigationProps>();
   const taskDetails = route.params?.details;
   const [selectedOption, setSelectedOption] = useState<string>("");
-  const [expand, setExpand] = useState<boolean>(false);
+  const [expand, setExpand] = useState<boolean>(true);
   const [animateSlide, setAnimateSlide] = useState<Animated.Value>(
-    new Animated.Value(0)
+    new Animated.Value(1)
   );
+  const [selectedOffers, setSelectedOffers] = useState<boolean>(true);
+
+  const scrollY = new Animated.Value(0);
 
   const items = [
     {
@@ -67,10 +78,6 @@ const TaskDetails: React.FC = () => {
     } else {
       slidingEffect(0);
     }
-
-    return () => {
-      navigation.navigate("browseTasks");
-    };
   }, [expand]);
 
   function slidingEffect(value: number) {
@@ -80,40 +87,122 @@ const TaskDetails: React.FC = () => {
     }).start();
   }
 
-  const animatedStyle: ViewStyle = {
+  const animateHeight: ViewStyle = {
+    height: animateSlide.interpolate({
+      inputRange: [0, 1],
+      outputRange: ["100%", "50%"],
+    }),
+  };
+
+  const animateVertically: ViewStyle = {
     transform: [
       {
         translateY: animateSlide.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, getWidthnHeight(-40)?.width!],
+          outputRange: [0, getMarginTop(-7).marginTop],
         }),
       },
     ],
   };
 
-  const animateHeight: ViewStyle = {
-    // height: animateSlide.interpolate({
-    //   inputRange: [0, 1],
-    //   outputRange: ["100%", "60%"],
-    // }),
-  };
-
   return (
     <ThemedSafe style={{ flex: 1 }}>
-      <ScrollView style={{ flex: 1 }}>
+      <Animated.View
+        style={[
+          styles.header,
+          {
+            transform: [
+              {
+                translateY: scrollY.interpolate({
+                  inputRange: [-HEADER_MAX_HEIGHT, 0, HEADER_SCROLL_DISTANCE],
+                  outputRange: [
+                    -HEADER_MAX_HEIGHT / 2,
+                    0,
+                    HEADER_SCROLL_DISTANCE / 2,
+                  ],
+                  extrapolate: "clamp",
+                }),
+              },
+              {
+                scale: scrollY.interpolate({
+                  inputRange: [-HEADER_MAX_HEIGHT, 0],
+                  outputRange: [2, 1],
+                  extrapolate: "clamp",
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <ThemedView
+          colorType={"screenBG"}
+          style={[
+            {
+              paddingHorizontal: getWidthnHeight(3)?.width,
+              borderWidth: 0,
+              flex: 1,
+              paddingBottom: getWidthnHeight(4)?.width,
+            },
+          ]}
+        >
+          <ThemedText
+            style={[
+              {
+                fontSize: fontSizeH4().fontSize + 5,
+                fontWeight: "500",
+              },
+            ]}
+          >
+            Make an offer now
+          </ThemedText>
+          <ThemedText
+            style={[
+              {
+                fontSize: fontSizeH4().fontSize + 5,
+                fontWeight: "normal",
+              },
+              getMarginTop(1.5),
+            ]}
+          >
+            60 Taskers have viewed this task already
+          </ThemedText>
+          <FlatButton
+            lightColor={Colors[theme]["yellow"]}
+            darkColor={Colors[theme]["yellow"]}
+            title="Make an offer"
+            onPress={() => {}}
+            style={[
+              {
+                borderRadius: getWidthnHeight(10)?.width,
+                paddingHorizontal: getWidthnHeight(5)?.width,
+                width: "100%",
+              },
+              getMarginTop(2),
+            ]}
+            textStyle={{
+              paddingVertical: getWidthnHeight(3)?.width,
+              fontSize: fontSizeH4().fontSize + 4,
+            }}
+          />
+        </ThemedView>
+      </Animated.View>
+      <Animated.ScrollView
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <ThemedView
           colorType={"screenBG"}
           style={{
             flex: 1,
-            borderWidth: 0.01,
-            borderColor: "transparent",
             paddingHorizontal: getWidthnHeight(3)?.width,
           }}
         >
-          <ThemedView
-            colorType={"white"}
-            style={[styles.shadow, getMarginTop(2)]}
-          >
+          <ThemedView colorType={"white"} style={[styles.shadow]}>
             <View
               style={[
                 {
@@ -177,7 +266,6 @@ const TaskDetails: React.FC = () => {
                   style={[
                     fontSizeH2(),
                     {
-                      lineHeight: -1,
                       fontFamily: "SquadaOne_400Regular",
                       color: Colors[theme]["iconColor"],
                     },
@@ -188,11 +276,11 @@ const TaskDetails: React.FC = () => {
                 </ThemedText>
               </View>
               <PostComponent
+                showDropdownIcon={true}
                 style={{
                   marginTop: getMarginTop(2).marginTop,
                   paddingHorizontal: getWidthnHeight(2)?.width,
                   paddingVertical: getWidthnHeight(1)?.width,
-                  backgroundColor: Colors[theme]["commonScreenBG"],
                   borderWidth: 0.01,
                   borderColor: "transparent",
                 }}
@@ -211,6 +299,7 @@ const TaskDetails: React.FC = () => {
                   paddingVertical: getWidthnHeight(1)?.width,
                   borderWidth: 0.01,
                   borderColor: "transparent",
+                  backgroundColor: Colors[theme]["commonScreenBG"],
                 }}
                 time={null}
                 title={"LOCATION"}
@@ -227,7 +316,6 @@ const TaskDetails: React.FC = () => {
                 style={{
                   paddingHorizontal: getWidthnHeight(2)?.width,
                   paddingVertical: getWidthnHeight(1)?.width,
-                  backgroundColor: Colors[theme]["commonScreenBG"],
                   borderWidth: 0.01,
                   borderColor: "transparent",
                 }}
@@ -242,73 +330,25 @@ const TaskDetails: React.FC = () => {
                   />
                 }
               />
-            </View>
-          </ThemedView>
-
-          <ThemedView
-            colorType={"white"}
-            style={[styles.shadow, getMarginTop(2)]}
-          >
-            <View
-              style={{
-                paddingVertical: getWidthnHeight(2)?.width,
-              }}
-            >
-              <View style={getMarginTop(0)}>
-                <ThemedText
-                  style={{
-                    textAlign: "center",
-                    fontSize: fontSizeH4().fontSize - 2,
-                  }}
-                >
-                  TASK BUDGET
-                </ThemedText>
-                <ThemedText
-                  style={[
-                    {
-                      lineHeight: -1,
-                      fontFamily: "SquadaOne_400Regular",
-                      color: Colors[theme]["iconColor"],
-                      textAlign: "center",
-                      fontSize: fontSizeH1().fontSize,
-                    },
-                  ]}
-                >
-                  $700
-                </ThemedText>
-              </View>
-              <FlatButton
-                lightColor={Colors[theme]["yellow"]}
-                darkColor={Colors[theme]["yellow"]}
-                title="Make an offer"
-                onPress={() => {}}
-                style={getMarginBottom(2)}
-                textStyle={{
-                  paddingVertical: getWidthnHeight(2)?.width,
-                  fontSize: fontSizeH4().fontSize + 3,
+              <PostComponent
+                style={{
+                  paddingHorizontal: getWidthnHeight(2)?.width,
+                  paddingVertical: getWidthnHeight(1)?.width,
+                  borderWidth: 0.01,
+                  borderColor: "transparent",
+                  backgroundColor: Colors[theme]["commonScreenBG"],
                 }}
+                time={null}
+                title={"TASK BUDGET"}
+                subtitle="700 USD"
+                icon={
+                  <ThemedFontAwesome
+                    name={"dollar"}
+                    colorType={"iconColor"}
+                    size={getWidthnHeight(6)?.width}
+                  />
+                }
               />
-              <View
-                style={[
-                  {
-                    paddingHorizontal: getWidthnHeight(3)?.width,
-                  },
-                  getMarginTop(0),
-                ]}
-              >
-                <ThemedPicker
-                  items={items}
-                  placeholder="More Options"
-                  colorType={"commonScreenBG"}
-                  containerStyle={{
-                    borderRadius: getWidthnHeight(2)?.width,
-                  }}
-                  selectedValue={selectedOption}
-                  onValueChange={(itemValue, index) => {
-                    console.log("@@@ ITEM SELECTED: ", itemValue);
-                  }}
-                />
-              </View>
             </View>
           </ThemedView>
 
@@ -318,7 +358,6 @@ const TaskDetails: React.FC = () => {
                 {
                   borderWidth: 0,
                 },
-                animateHeight,
                 getMarginTop(2),
               ]}
             >
@@ -343,7 +382,6 @@ const TaskDetails: React.FC = () => {
                   style={[
                     {
                       fontSize: fontSizeH4().fontSize + 2,
-                      lineHeight: -1,
                       textAlign: "justify",
                       borderWidth: 0,
                     },
@@ -353,7 +391,7 @@ const TaskDetails: React.FC = () => {
                   {`We are seeking a detail-oriented freelancer to transcribe data from PDF files into Excel spreadsheets.
               \nThe ideal candidate will have experience in accurately converting text and tables, ensuring that all data is entered correctly and formatted appropriately. This project requires attention to detail and proficiency with both PDF and Excel. If you have a keen eye for detail and can work efficiently, we would love to hear from you!`}
                 </ThemedText>
-                <Animated.View
+                {/* <Animated.View
                   style={[
                     {
                       borderWidth: 0,
@@ -390,48 +428,274 @@ const TaskDetails: React.FC = () => {
                       />
                     </TouchableOpacity>
                   </ThemedGradientView>
-                  <ThemedView>
-                    <ThemedText
-                      style={[
-                        {
-                          fontSize: fontSizeH4().fontSize + 4,
-                          fontWeight: "500",
-                        },
-                        getMarginTop(3),
-                      ]}
-                    >
-                      Offers
-                    </ThemedText>
-                    <ThemedView>
-                      <View style={[{ alignItems: "center" }, getMarginTop(2)]}>
-                        <Image
-                          source={require("../../assets/offers.png")}
-                          resizeMode="contain"
-                          style={{
-                            width: getWidthnHeight(40)?.width,
-                            height: getWidthnHeight(40)?.width,
-                          }}
+                </Animated.View> */}
+                <ThemedView
+                  colorType={"commonScreenBG"}
+                  style={[
+                    {
+                      flexDirection: "row",
+                      borderRadius: getWidthnHeight(10)?.width,
+                    },
+                    getMarginTop(2),
+                  ]}
+                >
+                  <FlatButton
+                    colorType={selectedOffers ? "yellow" : "transparent"}
+                    title="Offers"
+                    onPress={() => setSelectedOffers(true)}
+                    style={[
+                      {
+                        borderRadius: getWidthnHeight(10)?.width,
+                        paddingHorizontal: getWidthnHeight(5)?.width,
+                        width: "50%",
+                      },
+                    ]}
+                    textStyle={{
+                      paddingVertical: getWidthnHeight(3)?.width,
+                      fontSize: fontSizeH4().fontSize + 4,
+                    }}
+                  />
+                  <FlatButton
+                    colorType={!selectedOffers ? "yellow" : "transparent"}
+                    title="Questions"
+                    onPress={() => setSelectedOffers(false)}
+                    style={[
+                      {
+                        borderRadius: getWidthnHeight(10)?.width,
+                        paddingHorizontal: getWidthnHeight(5)?.width,
+                        width: "50%",
+                      },
+                    ]}
+                    textStyle={{
+                      paddingVertical: getWidthnHeight(3)?.width,
+                      fontSize: fontSizeH4().fontSize + 4,
+                    }}
+                  />
+                </ThemedView>
+                <ThemedView style={[{ borderWidth: 0 }, getMarginTop(3)]}>
+                  {selectedOffers && (
+                    <>
+                      <UserDetails
+                        title={"Leonardo C."}
+                        ratings={"4.9"}
+                        count={25}
+                        subTitle={"94%"}
+                      />
+                      <ThemedView
+                        style={{
+                          flex: 1,
+                        }}
+                      >
+                        <Animated.View
+                          style={[
+                            {
+                              padding: getWidthnHeight(4)?.width,
+                              borderRadius: getWidthnHeight(2)?.width,
+                              backgroundColor: Colors[theme]["commonScreenBG"],
+                            },
+                            animateHeight,
+                          ]}
+                        >
+                          <ThemedText
+                            style={[
+                              {
+                                fontSize: fontSizeH4().fontSize + 2,
+                                textAlign: "justify",
+                                borderWidth: 0,
+                              },
+                            ]}
+                          >
+                            {`We are seeking a detail-oriented freelancer to transcribe data from PDF files into Excel spreadsheets.
+              \nThe ideal candidate will have experience in accurately converting text and tables, ensuring that all data is entered correctly and formatted appropriately. This project requires attention to detail and proficiency with both PDF and Excel. If you have a keen eye for detail and can work efficiently, we would love to hear from you!`}
+                          </ThemedText>
+                          <Animated.View
+                            style={[
+                              { flex: 1 },
+                              animateVertically,
+                              getMarginTop(2),
+                            ]}
+                          >
+                            <ThemedView
+                              colorType={"commonScreenBG"}
+                              style={{
+                                flex: 1,
+                                paddingTop: getWidthnHeight(5)?.width,
+                              }}
+                            >
+                              <TouchableOpacity
+                                style={{
+                                  justifyContent: "flex-start",
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  // paddingBottom: getMarginTop(4).marginTop,
+                                }}
+                                onPress={() => setExpand(!expand)}
+                              >
+                                <ThemedText>
+                                  {expand ? "More" : "Less"}
+                                </ThemedText>
+                                <ThemedMaterialIcons
+                                  name={
+                                    expand
+                                      ? "keyboard-arrow-down"
+                                      : "keyboard-arrow-up"
+                                  }
+                                  colorType={"iconColor"}
+                                  size={getWidthnHeight(6)?.width}
+                                />
+                              </TouchableOpacity>
+                            </ThemedView>
+                          </Animated.View>
+                        </Animated.View>
+                      </ThemedView>
+                      <View
+                        style={[
+                          {
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                          },
+                          getMarginTop(3),
+                        ]}
+                      >
+                        <View
+                          style={[
+                            {
+                              flexDirection: "row",
+                              alignItems: "center",
+                            },
+                          ]}
+                        >
+                          <ThemedAntDesign
+                            name={"back"}
+                            colorType={"iconColor"}
+                            size={getWidthnHeight(5)?.width}
+                          />
+                          <ThemedText
+                            style={[
+                              {
+                                fontSize: fontSizeH4().fontSize + 2,
+                                fontWeight: "500",
+                              },
+                              getMarginLeft(2),
+                            ]}
+                          >
+                            View replies (1)
+                          </ThemedText>
+                          <ThemedText
+                            colorType={"darkGray"}
+                            style={[
+                              {
+                                fontSize: fontSizeH4().fontSize + 2,
+                              },
+                              getMarginLeft(2),
+                            ]}
+                          >
+                            1 week ago
+                          </ThemedText>
+                        </View>
+                        <ThemedMaterialCommunityIcons
+                          name={"dots-horizontal"}
+                          colorType={"darkGray"}
+                          size={getWidthnHeight(5)?.width}
                         />
                       </View>
-                    </ThemedView>
-                    <View style={{ borderWidth: 0 }}>
-                      <FlatButton
-                        colorType={"lightYellow"}
-                        title="Make an offer"
-                        onPress={() => {}}
+                    </>
+                  )}
+                  {!selectedOffers && (
+                    <ThemedView>
+                      <ThemedView
                         style={{
-                          borderRadius: getWidthnHeight(10)?.width,
-                          alignSelf: "center",
-                          paddingHorizontal: getWidthnHeight(10)?.width,
+                          flexDirection: "row",
                         }}
-                        textStyle={{
-                          paddingVertical: getWidthnHeight(2)?.width,
-                          fontSize: fontSizeH4().fontSize + 3,
-                        }}
-                      />
-                    </View>
-                  </ThemedView>
-                </Animated.View>
+                      >
+                        <ThemedIonicons
+                          name="eye-outline"
+                          colorType={"darkGray"}
+                          size={getWidthnHeight(6)?.width}
+                        />
+                        <ThemedText
+                          colorType={"darkGray"}
+                          style={[
+                            {
+                              flex: 1,
+                              fontSize: fontSizeH4().fontSize + 3,
+                            },
+                            getMarginLeft(2),
+                          ]}
+                        >
+                          {
+                            "These messages are publlic and can be seen by anyone. Do not share your personal info."
+                          }
+                        </ThemedText>
+                      </ThemedView>
+                      <View style={[{ flexDirection: "row" }, getMarginTop(2)]}>
+                        <ThemedFontAwesome
+                          name={"user-circle-o"}
+                          colorType={"darkGray"}
+                          size={getWidthnHeight(5)?.width}
+                        />
+                        <ThemedView
+                          colorType={"commonScreenBG"}
+                          style={[
+                            {
+                              borderRadius: getWidthnHeight(2)?.width,
+                              paddingHorizontal: getWidthnHeight(2)?.width,
+                              flex: 1,
+                            },
+                            getMarginLeft(2),
+                          ]}
+                        >
+                          <PrimaryInput
+                            containerStyle={{
+                              backgroundColor: "transparent",
+                            }}
+                            style={{
+                              fontSize: fontSizeH4().fontSize + 4,
+                              margin: getWidthnHeight(2)?.width,
+                            }}
+                            placeholder="Ask a question"
+                            placeholderTextColor={"darkGray"}
+                            onChangeText={(text) => {}}
+                          />
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              paddingBottom: getWidthnHeight(2)?.width,
+                            }}
+                          >
+                            <ThemedIonicons
+                              name={"image"}
+                              colorType={"darkGray"}
+                              size={getWidthnHeight(5)?.width}
+                            />
+                            <FlatButton
+                              title={"Send"}
+                              onPress={() => {}}
+                              colorType={"commonScreenBG"}
+                              style={{
+                                borderRadius: getWidthnHeight(10)?.width,
+                                borderWidth: 1,
+                              }}
+                              textStyle={{
+                                fontWeight: "normal",
+                                fontSize: fontSizeH4().fontSize + 3,
+                                paddingHorizontal: getWidthnHeight(5)?.width,
+                                paddingVertical: getWidthnHeight(1)?.width,
+                              }}
+                            />
+                          </View>
+                        </ThemedView>
+                      </View>
+                      <View style={[{ flex: 1 }, getMarginTop(2)]}>
+                        <ChatComponent />
+                        <ChatComponent style={getMarginTop(2)} />
+                      </View>
+                    </ThemedView>
+                  )}
+                </ThemedView>
               </ThemedView>
             </Animated.View>
           </View>
@@ -441,7 +705,7 @@ const TaskDetails: React.FC = () => {
           >
             <View
               style={{
-                padding: getWidthnHeight(2)?.width,
+                padding: getWidthnHeight(3)?.width,
               }}
             >
               <ThemedText
@@ -450,13 +714,13 @@ const TaskDetails: React.FC = () => {
                   fontWeight: "500",
                 }}
               >
-                Cancellation policy
+                What happens when a task is cancelled
               </ThemedText>
               <ThemedText
                 style={[
                   {
                     fontSize: fontSizeH4().fontSize + 2,
-                    lineHeight: -1,
+                    // lineHeight: -1,
                     textAlign: "justify",
                     borderWidth: 0,
                   },
@@ -468,7 +732,7 @@ const TaskDetails: React.FC = () => {
             </View>
           </ThemedView>
         </ThemedView>
-      </ScrollView>
+      </Animated.ScrollView>
     </ThemedSafe>
   );
 };
@@ -480,6 +744,20 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     borderRadius: getWidthnHeight(3)?.width,
     overflow: "hidden",
+  },
+  header: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: HEADER_MAX_HEIGHT,
+    width: "100%",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingTop: HEADER_MAX_HEIGHT - getWidthnHeight(5)?.width!, // Space for the header
   },
 });
 

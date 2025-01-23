@@ -4,6 +4,7 @@ import { ThemedFontAwesome } from "./ThemedFontAwesome";
 import { fontSizeH4, getWidthnHeight } from "./width";
 import { View, ViewStyle, TextStyle } from "react-native";
 import { ThemedText } from "./ThemedText";
+import { ThemedMaterialIcons } from "./ThemedMaterialIcon";
 
 type PostComponentProps = {
   lightColor?: string;
@@ -15,6 +16,7 @@ type PostComponentProps = {
   time?: string | null;
   titleStyle?: TextStyle;
   subtitleStyle?: TextStyle;
+  showDropdownIcon?: boolean;
 };
 
 const PostComponent: React.FC<PostComponentProps> = ({
@@ -33,6 +35,7 @@ const PostComponent: React.FC<PostComponentProps> = ({
   time = "about 1 hour ago",
   titleStyle,
   subtitleStyle,
+  showDropdownIcon = false,
   ...otherProps
 }) => {
   return (
@@ -64,12 +67,19 @@ const PostComponent: React.FC<PostComponentProps> = ({
             </ThemedText>
           )}
         </View>
-        <ThemedText
+        {showDropdownIcon && (
+          <ThemedMaterialIcons
+            name={"keyboard-arrow-right"}
+            colorType={"darkGray"}
+            size={getWidthnHeight(5)?.width}
+          />
+        )}
+        {/* <ThemedText
           colorType={"darkGray"}
           style={{ fontSize: fontSizeH4().fontSize - 1 }}
         >
           {time}
-        </ThemedText>
+        </ThemedText> */}
       </View>
     </ThemedView>
   );

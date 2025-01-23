@@ -1,18 +1,22 @@
-import { StyleSheet, Text, useColorScheme, View } from "react-native";
+import { StyleSheet, Text, useColorScheme } from "react-native";
 import {
   DarkTheme,
   DefaultTheme,
   NavigationContainer,
   ThemeProvider,
 } from "@react-navigation/native";
+import "react-native-get-random-values";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useEffect } from "react";
 import { PaperProvider } from "react-native-paper";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider, useSelector } from "react-redux";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+
 import { RootState, store } from "./redux/store";
 import LoadingStack from "./screens/LoadingStack";
 import NoAuthStackNavigator from "./screens/NoAuthStack";
 import AuthStackNavigator from "./screens/AuthStack";
-import { useEffect } from "react";
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -24,11 +28,15 @@ export default function App() {
       (state: RootState) => state.auth
     );
     return (
-      <NavigationContainer>
-        {isLoggedIn == null && <LoadingStack />}
-        {isLoggedIn == false && <NoAuthStackNavigator />}
-        {isLoggedIn && <AuthStackNavigator />}
-      </NavigationContainer>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <BottomSheetModalProvider>
+            {isLoggedIn == null && <LoadingStack />}
+            {isLoggedIn == false && <NoAuthStackNavigator />}
+            {isLoggedIn && <AuthStackNavigator />}
+          </BottomSheetModalProvider>
+        </NavigationContainer>
+      </SafeAreaProvider>
     );
   }
   return (

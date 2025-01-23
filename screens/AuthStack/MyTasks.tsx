@@ -54,15 +54,17 @@ const MyTasks: React.FC = () => {
     {
       id: "1",
       title: "PDF to Excel",
+      status: "Completed",
     },
     {
       id: "2",
       title: "MS Word",
+      status: "Unpaid",
     },
   ];
 
   return (
-    <ThemedSafe style={{ flex: 1 }}>
+    <ThemedView style={{ flex: 1 }}>
       <ThemedView
         style={{ paddingHorizontal: getWidthnHeight(3)?.width, borderWidth: 0 }}
       >
@@ -124,13 +126,13 @@ const MyTasks: React.FC = () => {
                   },
                 ]}
               >
-                <TaskCard />
+                <TaskCard title={item.title} status={item.status} />
               </View>
             );
           }}
         />
       </ThemedView>
-    </ThemedSafe>
+    </ThemedView>
   );
 };
 

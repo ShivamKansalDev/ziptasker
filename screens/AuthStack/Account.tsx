@@ -8,6 +8,10 @@ import {
   useColorScheme,
   View,
 } from "react-native";
+import auth from "@react-native-firebase/auth";
+import { useDispatch } from "react-redux";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { Colors } from "../../constants/Colors";
 import {
   fontSizeH2,
@@ -25,15 +29,17 @@ import { ThemedMaterialIcons } from "../../components/ThemedMaterialIcon";
 import { ArrowComponent } from "../../components/ArrowComponent";
 import { ThemedAntDesign } from "../../components/ThemedAntDesign";
 import { ThemedIonicons } from "../../components/ThemedIonicons";
+import { authActions } from "../../redux/slice/auth";
 
 const Account = () => {
   const theme = useColorScheme() ?? "light";
+  const dispatch = useDispatch();
   const { details }: { details: string } = useSelector(
     (state: RootState) => state.auth
   );
   const fullName = details ? JSON.parse(details) : { name: "Shivam Kansal" };
   return (
-    <ThemedSafe style={{ flex: 1 }}>
+    <ThemedView style={{ flex: 1 }}>
       <ThemedView
         style={{
           paddingHorizontal: getWidthnHeight(3)?.width,
@@ -54,7 +60,7 @@ const Account = () => {
               style={[
                 fontSizeH2(),
                 {
-                  lineHeight: -1,
+                  // lineHeight: -1,
                   fontFamily: "SquadaOne_400Regular",
                   color: Colors[theme]["iconColor"],
                 },
@@ -66,7 +72,7 @@ const Account = () => {
               style={[
                 ,
                 {
-                  lineHeight: -1,
+                  // lineHeight: -1,
                   color: Colors[theme]["iconColor"],
                   fontSize: fontSizeH4().fontSize + 2,
                 },
@@ -90,7 +96,7 @@ const Account = () => {
             style={[
               ,
               {
-                lineHeight: -1,
+                // lineHeight: -1,
                 color: Colors[theme]["iconColor"],
                 fontSize: fontSizeH4().fontSize + 2,
               },
@@ -113,7 +119,7 @@ const Account = () => {
               style={[
                 ,
                 {
-                  lineHeight: -1,
+                  // lineHeight: -1,
                   color: Colors[theme]["iconColor"],
                   fontSize: fontSizeH4().fontSize + 2,
                 },
@@ -264,6 +270,24 @@ const Account = () => {
                     fontSize: fontSizeH4().fontSize + 2,
                   }}
                 />
+                <ArrowComponent
+                  onPress={async () => {
+                    AsyncStorage.clear();
+                    dispatch(authActions.setIsLoggedIn(null));
+                    await auth().signOut();
+                  }}
+                  icon={
+                    <ThemedIonicons
+                      name={"exit-outline"}
+                      colorType={"iconColor"}
+                      size={getWidthnHeight(6)?.width}
+                    />
+                  }
+                  title="Logout"
+                  titleStyle={{
+                    fontSize: fontSizeH4().fontSize + 4,
+                  }}
+                />
                 {/* <ArrowComponent
                   icon={
                     <ThemedMaterialIcons
@@ -287,7 +311,7 @@ const Account = () => {
           </View>
         </ThemedView>
       </View>
-    </ThemedSafe>
+    </ThemedView>
   );
 };
 

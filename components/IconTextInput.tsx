@@ -1,52 +1,86 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, forwardRef } from "react";
 import {
+  StyleProp,
   TextInput,
   TextInputProps,
   TextStyle,
   useColorScheme,
   View,
+  ViewStyle,
 } from "react-native";
 
 import { ThemedView } from "./ThemedView";
 import { ThemedIonicons } from "./ThemedIonicons";
 import { getWidthnHeight } from "./width";
 import { Colors } from "../constants/Colors";
+import { ThemedAntDesign } from "./ThemedAntDesign";
 
 type IconTextInputProps = TextInputProps & {
   lightColor?: string;
   darkColor?: string;
   icon?: ReactNode;
   style?: TextStyle;
+  containerStyle?: StyleProp<ViewStyle>;
+  placeholderTextColor?: keyof typeof Colors.light & keyof typeof Colors.dark;
+  onClear?: () => void;
 };
 
-const IconTextInput: React.FC<IconTextInputProps> = ({
-  icon,
-  style,
-  lightColor,
-  darkColor,
-  ...otherProps
-}) => {
-  const theme = useColorScheme() ?? "light";
-  return (
-    <ThemedView
-      colorType={"screenBG"}
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingHorizontal: getWidthnHeight(3)?.width,
-        paddingVertical: getWidthnHeight(2)?.width,
-        borderRadius: getWidthnHeight(3)?.width,
-        elevation: 4,
-        shadowColor: Colors[theme]["iconColor"],
-        shadowOpacity: 0.6,
-        shadowRadius: 6,
-      }}
-    >
-      {icon && <View style={{ borderWidth: 0 }}>{icon}</View>}
-      <TextInput style={style} {...otherProps} />
-    </ThemedView>
-  );
-};
+const IconTextInput = forwardRef<TextInput, IconTextInputProps>(
+  (
+    {
+      icon,
+      style,
+      lightColor,
+      darkColor,
+      placeholderTextColor = "darkGray",
+      containerStyle,
+      value,
+      onClear,
+      ...otherProps
+    },
+    ref
+  ) => {
+    const theme = useColorScheme() ?? "light";
+    return (
+      <ThemedView
+        colorType={"screenBG"}
+        style={[
+          {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: getWidthnHeight(3)?.width,
+            paddingVertical: getWidthnHeight(2)?.width,
+            borderRadius: getWidthnHeight(3)?.width,
+            elevation: 4,
+            shadowColor: Colors[theme]["iconColor"],
+            shadowOpacity: 0.6,
+            shadowRadius: 6,
+          },
+          containerStyle,
+        ]}
+      >
+        {icon && <View style={{ borderWidth: 0 }}>{icon}</View>}
+        <TextInput
+          ref={ref}
+          value={value}
+          placeholderTextColor={placeholderTextColor}
+          style={style}
+          {...otherProps}
+        />
+        {value && (
+          <View style={{ borderWidth: 0 }}>
+            <ThemedAntDesign
+              name={"closecircle"}
+              colorType={"darkGray"}
+              size={getWidthnHeight(6)?.width}
+              onPress={onClear}
+            />
+          </View>
+        )}
+      </ThemedView>
+    );
+  }
+);
 
 export { IconTextInput };

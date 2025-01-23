@@ -22,9 +22,16 @@ import { ThemedMaterialIcons } from "./ThemedMaterialIcon";
 type TaskCardProps = TouchableOpacityProps & {
   lightColor?: string;
   darkColor?: string;
+  status?: string;
+  title?: string;
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ onPress, ...otherProps }) => {
+const TaskCard: React.FC<TaskCardProps> = ({
+  onPress,
+  title,
+  status = "Open",
+  ...otherProps
+}) => {
   const theme = useColorScheme() ?? "light";
   return (
     <ThemedView
@@ -38,9 +45,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ onPress, ...otherProps }) => {
       ]}
     >
       <View style={{ flex: 1 }}>
-        <View style={{ flexDirection: "row" }}>
+        <View style={[{ flexDirection: "row" }, getMarginBottom(1)]}>
           <View style={{ borderWidth: 0, flex: 1 }}>
-            <ThemedText style={{ fontWeight: "500" }}>PDF to Excel</ThemedText>
+            <ThemedText style={{ fontWeight: "500" }}>{title}</ThemedText>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <ThemedMaterialIcons name={"computer"} colorType={"darkGray"} />
               <ThemedText
@@ -102,7 +109,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ onPress, ...otherProps }) => {
                 },
               ]}
             >
-              Open
+              {status}
             </ThemedText>
             <ThemedFontAwesome
               name={"user-circle"}

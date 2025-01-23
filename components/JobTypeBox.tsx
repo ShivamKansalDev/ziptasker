@@ -78,7 +78,7 @@ const JobTypeBox: React.FC<JobTypeBoxProps> = ({
           style={[
             {
               textAlign: "center",
-              lineHeight: -1,
+              // lineHeight: -1,
               paddingHorizontal: getWidthnHeight(3)?.width,
             },
             textColor && { color: textColor },

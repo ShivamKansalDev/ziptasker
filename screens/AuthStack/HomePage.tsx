@@ -13,7 +13,9 @@ import {
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import AntDesign from "@expo/vector-icons/AntDesign";
+import auth from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import NetInfo from "@react-native-community/netinfo";
 
 import { ThemedView } from "../../components/ThemedView";
 import { ThemedText } from "../../components/ThemedText";
@@ -37,7 +39,8 @@ import { ThemedAntDesign } from "../../components/ThemedAntDesign";
 import { FontAwesome } from "@expo/vector-icons";
 import { ThemedButton } from "../../components/Buttons/RoundButton";
 import { useNavigation } from "@react-navigation/native";
-import { DrawerNavProp } from ".";
+import { BrowseStackNavigationProps, DrawerNavProp } from ".";
+import { MessageComponent } from "../../components/MessageComponent";
 
 function HomePage() {
   const { details }: { details: string } = useSelector(
@@ -47,7 +50,7 @@ function HomePage() {
   const [hourHand, setHourHand] = useState<number | null>(null);
   const [greetings, setGreetings] = useState<string>("Good morning");
   const [task, setTask] = useState<string | null>("");
-  const navigation = useNavigation<DrawerNavProp>();
+  const navigation = useNavigation<BrowseStackNavigationProps>();
 
   const chores = [
     {
@@ -122,6 +125,46 @@ function HomePage() {
   ];
 
   useEffect(() => {
+    NetInfo.fetch().then((state) => {
+      if (!state.isConnected) {
+        console.error(
+          "No internet connection. Firestore requires an active network."
+        );
+      } else {
+        saveUserData();
+      }
+    });
+  }, []);
+
+  const saveUserData = async () => {
+    const user = auth().currentUser;
+    try {
+      if (user) {
+        const userRef = firestore().collection("users").doc(user.uid);
+        console.log("### user: ", user.phoneNumber);
+        // Check if the user document already exists
+        const userExists = (await userRef.get()).exists;
+        console.log("### userExists: ", userExists);
+
+        if (!userExists) {
+          // Create a new user document
+          await userRef.set({
+            phoneNumber: user.phoneNumber,
+            createdAt: firestore.FieldValue.serverTimestamp(),
+          });
+          console.log("User data saved to Firestore");
+        } else {
+          console.log("User document already exists");
+        }
+      } else {
+        console.log("No user is logged in");
+      }
+    } catch (error) {
+      console.log("!!! USER SAVE ERROR: ", error);
+    }
+  };
+
+  useEffect(() => {
     const hour = moment().hour();
     if (hour < 12) {
       setGreetings("Good morning");
@@ -140,10 +183,10 @@ function HomePage() {
     color2 = "transparent";
   }
   return (
-    <ThemedSafe
+    <ThemedView
       lightColor={Colors.light.screenBG}
       darkColor={Colors.dark.screenBG}
-      style={{ flex: 1 }}
+      style={{ flex: 1, borderWidth: 0 }}
     >
       <View
         style={[
@@ -187,7 +230,7 @@ function HomePage() {
             style={[
               fontSizeH2(),
               {
-                lineHeight: -1,
+                // lineHeight: -1,
                 fontFamily: "SquadaOne_400Regular",
                 color: Colors[theme]["iconColor"],
               },
@@ -198,9 +241,12 @@ function HomePage() {
           </ThemedText>
         </ThemedView>
         <View
-          style={{
-            padding: getWidthnHeight(3)?.width,
-          }}
+          style={[
+            {
+              padding: getWidthnHeight(3)?.width,
+            },
+            getMarginTop(2.5),
+          ]}
         >
           <View
             style={[
@@ -221,7 +267,7 @@ function HomePage() {
                 margin: getWidthnHeight(2)?.width,
               }}
               placeholder="In a few words, what do you need done?"
-              placeholderTextColor={Colors[theme]["darkGray"]}
+              placeholderTextColor={"darkGray"}
               onChangeText={(text) => setTask(text.trimStart())}
             />
           </View>
@@ -335,14 +381,47 @@ function HomePage() {
             <ThemedText
               style={[
                 { fontSize: fontSizeH4().fontSize + 6, fontWeight: "500" },
+              ]}
+            >
+              Rebook a Tasker
+            </ThemedText>
+            <ThemedText style={[{}, fontSizeH4(), getMarginTop(0.5)]}>
+              Get a quote from Taskers you've worked with previously!
+            </ThemedText>
+            <ThemedView
+              style={[
+                {
+                  paddingHorizontal: getWidthnHeight(3)?.width,
+                  paddingVertical: getWidthnHeight(6)?.width,
+                  borderRadius: getWidthnHeight(3)?.width,
+                  shadowColor: Colors[theme]["iconColor"],
+                  shadowOpacity: 0.4,
+                  shadowRadius: 6,
+                  elevation: 4,
+                },
+                getMarginVertical(2),
+              ]}
+            >
+              <TouchableOpacity
+                activeOpacity={0.6}
+                onPress={() => navigation.navigate("pvtMessage")}
+              >
+                <MessageComponent
+                  title={"Ruchit D."}
+                  numberOfLines={1}
+                  showDate={false}
+                />
+              </TouchableOpacity>
+            </ThemedView>
+            <ThemedText
+              style={[
+                { fontSize: fontSizeH4().fontSize + 6, fontWeight: "500" },
                 getMarginTop(1),
               ]}
             >
               Get it done today
             </ThemedText>
-            <ThemedText
-              style={[{ lineHeight: 20 }, fontSizeH4(), getMarginTop(0.5)]}
-            >
+            <ThemedText style={[{}, fontSizeH4(), getMarginTop(0.5)]}>
               To-do list never getting shorter ? Take the burden off and find
               the help you need on Airtasker.
             </ThemedText>
@@ -366,6 +445,11 @@ function HomePage() {
                     style={({ pressed }) => ({
                       opacity: pressed ? 0.8 : 1,
                     })}
+                    onPress={() => {
+                      navigation.navigate("createTask", {
+                        title: item.title,
+                      });
+                    }}
                   >
                     <ThemedView
                       style={{
@@ -420,7 +504,7 @@ function HomePage() {
           </View> */}
         </ScrollView>
       </View>
-    </ThemedSafe>
+    </ThemedView>
   );
 }
 

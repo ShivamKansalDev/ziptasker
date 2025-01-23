@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const initialState = {
   isLoggedIn: null,
   details: "",
+  showMap: false,
 };
 
 const authSlice = createSlice({
@@ -22,6 +23,12 @@ const authSlice = createSlice({
       return {
         ...state,
         details: action.payload,
+      };
+    },
+    setShowMap: (state, action) => {
+      return {
+        ...state,
+        showMap: action.payload,
       };
     },
   },

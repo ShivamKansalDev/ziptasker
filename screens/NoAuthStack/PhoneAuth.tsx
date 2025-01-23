@@ -14,10 +14,12 @@ import {
 } from "react-native";
 import { useDispatch } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
-import { PhoneAuthProvider } from "firebase/auth";
+
+import auth from "@react-native-firebase/auth";
+// import { PhoneAuthProvider } from "firebase/auth";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
+// import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 
 import { ThemedSafe } from "../../components/ThemedSafe";
 import { ThemedView } from "../../components/ThemedView";
@@ -34,59 +36,39 @@ import {
 import { Colors } from "../../constants/Colors";
 import { PhoneInput } from "../../components/PhoneInput";
 import { LoginTypesStackParamList } from ".";
-import { auth, firebaseConfig } from "../LoadingStack/index";
 
 type NavigationProp = NativeStackNavigationProp<LoginTypesStackParamList>;
 
 function PhoneAuth() {
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp>();
-  const recaptchVerifier = useRef<FirebaseRecaptchaVerifierModal | null>(null);
+  // const recaptchVerifier = useRef<FirebaseRecaptchaVerifierModal | null>(null);
 
   const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const sendConfirmationCode = async (number: string) => {
     try {
-      const provider = new PhoneAuthProvider(auth);
-      const verificationId = await provider.verifyPhoneNumber(
-        `+91${number}`,
-        recaptchVerifier.current!
-      );
-      return verificationId;
+      return auth().verifyPhoneNumber(`+91${number}`);
     } catch (error: any) {
       console.log("!!! ERROR: ", error);
       // Alert.alert("Error!!", JSON.stringify(error, null, 4))
     }
   };
 
-  useEffect(() => {
-    console.log("$$$$ LOGIN PAGE");
-  }, []);
-
   const theme = useColorScheme() ?? "light";
 
   return (
-    <ThemedSafe style={{ flex: 1, alignItems: "center" }}>
-      <View
+    <ThemedSafe style={{ flex: 1, alignItems: "center", borderWidth: 0 }}>
+      <ThemedView
         style={[
           {
             flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
+            backgroundColor: "transparent",
           },
-          StyleSheet.absoluteFillObject,
-        ]}
-      ></View>
-      <ThemedView
-        style={[
-          { flex: 1, backgroundColor: "transparent" },
           getWidthnHeight(100),
         ]}
       >
-        <FirebaseRecaptchaVerifierModal
-          ref={recaptchVerifier}
-          firebaseConfig={firebaseConfig}
-        />
         {/* <KeyboardAvoidingView style={[{ flex: 1 }]}>
           <ScrollView
             keyboardShouldPersistTaps="always"
@@ -106,21 +88,20 @@ function PhoneAuth() {
               style={[
                 {
                   fontFamily: "Cookie_400Regular",
-                  fontSize: fontSizeH2().fontSize + 8,
-                  lineHeight: -1,
+                  fontSize: fontSizeH2().fontSize,
+                  textAlignVertical: "center",
                   textAlign: "left",
                 },
-                // getMarginTop(5),
+                getMarginTop(-5),
               ]}
             >
               {"Phone\nAuthentication"}
             </ThemedText>
-            <View style={[getMarginTop(2)]}>
+            <View style={[]}>
               <ThemedText
                 style={{
                   // fontFamily: "Cookie_400Regular",
-                  fontSize: fontSizeH4().fontSize + 0,
-                  lineHeight: -1,
+                  fontSize: fontSizeH4().fontSize,
                   textAlign: "left",
                 }}
               >
@@ -154,6 +135,7 @@ function PhoneAuth() {
               <PhoneInput
                 containerStyle={{
                   width: getWidthnHeight(70)?.width,
+                  paddingVertical: getWidthnHeight(3)?.width,
                   // marginLeft: getMarginLeft(10).marginLeft,
                 }}
                 inputProps={{
@@ -169,35 +151,59 @@ function PhoneAuth() {
                   },
                 }}
               />
-              <TouchableOpacity
-                activeOpacity={0.7}
-                style={{
-                  width: "25%",
-                  borderWidth: 0,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onPress={async () => {
-                  if (phoneNumber?.length === 10) {
-                    Keyboard.dismiss();
-                    const verificationId = await sendConfirmationCode(
-                      phoneNumber
-                    );
-                    if (verificationId) {
-                      navigation.navigate("otpVerify", {
-                        verificationId: verificationId,
-                        phoneNumber: phoneNumber,
-                      });
+              {loading ? (
+                <View
+                  style={{
+                    width: "25%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator
+                    color={Colors[theme]["yellow"]}
+                    size={"large"}
+                    style={{ transform: [{ scale: 1.3 }] }}
+                  />
+                </View>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  style={{
+                    width: "25%",
+                    borderWidth: 0,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  onPress={async () => {
+                    if (phoneNumber?.length === 10) {
+                      try {
+                        setLoading(true);
+                        Keyboard.dismiss();
+                        const confirmation = await sendConfirmationCode(
+                          phoneNumber
+                        );
+                        setLoading(false);
+                        console.log("### CONFIRMATION: ", confirmation);
+                        if (confirmation?.verificationId) {
+                          navigation.navigate("otpVerify", {
+                            verificationId: confirmation.verificationId,
+                            phoneNumber: phoneNumber,
+                          });
+                        }
+                      } catch (error) {
+                        console.log("!!! OTP Verification error: ", error);
+                        setLoading(false);
+                      }
                     }
-                  }
-                }}
-              >
-                <MaterialCommunityIcons
-                  name="arrow-right-circle"
-                  color={Colors[theme]["primary"]}
-                  size={getWidthnHeight(13)?.width}
-                />
-              </TouchableOpacity>
+                  }}
+                >
+                  <MaterialCommunityIcons
+                    name="arrow-right-circle"
+                    color={Colors[theme]["primary"]}
+                    size={getWidthnHeight(13)?.width}
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           </View>
           <Image

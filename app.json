@@ -18,7 +18,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "userInterfaceStyle": "automatic"
+      "userInterfaceStyle": "automatic",
+      "bundleIdentifier": "com.alpha.ziptasker"
     },
     "android": {
       "userInterfaceStyle": "automatic",
@@ -45,7 +46,7 @@
             "node_modules/@expo-google-fonts/inter/Inter_900Black.ttf",
             "node_modules/@expo-google-fonts/dancing-script/DancingScript_400Regular.ttf",
             "node_modules/@expo-google-fonts/dancing-script/DancingScript_500Medium.ttf",
-            "node_modules/@expo-google-fonts/dancing-script/DancingScript_600SemiBold",
+            "node_modules/@expo-google-fonts/dancing-script/DancingScript_600SemiBold.ttf",
             "node_modules/@expo-google-fonts/dancing-script/DancingScript_700Bold.ttf",
             "node_modules/@expo-google-fonts/great-vibes/GreatVibes_400Regular.ttf",
             "node_modules/@expo-google-fonts/birthstone/Birthstone_400Regular.ttf",
@@ -55,7 +56,15 @@
             "node_modules/@expo-google-fonts/whisper/Whisper_400Regular.ttf"
           ]
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
     ],
     "extra": {
       "eas": {

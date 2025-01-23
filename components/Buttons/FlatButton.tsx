@@ -1,5 +1,11 @@
 import React from "react";
-import { ButtonProps, TextStyle, TouchableOpacity } from "react-native";
+import {
+  ButtonProps,
+  StyleProp,
+  TextStyle,
+  TouchableOpacity,
+  ViewStyle,
+} from "react-native";
 import { ThemedView } from "../ThemedView";
 import { ThemedText } from "../ThemedText";
 import { fontSizeH4, getWidthnHeight } from "../width";
@@ -10,7 +16,7 @@ type FlatButtonProps = {
   onPress?: () => void;
   lightColor?: string;
   darkColor?: string;
-  style?: TextStyle;
+  style?: StyleProp<ViewStyle>;
   textStyle?: TextStyle;
   colorType?: keyof typeof Colors.light & keyof typeof Colors.dark;
 };

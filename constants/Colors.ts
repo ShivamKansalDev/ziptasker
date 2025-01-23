@@ -3,6 +3,7 @@
  * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
  */
 const primary = "#FFCE00";
+const lightPrimary = "#fff6cc";
 const tintColorLight = "#0a7ea4";
 const tintColorDark = "#fff";
 const darkPrimary = "#151718";
@@ -31,10 +32,14 @@ export const Colors = {
     orange: "#FF9D3D",
     white: "#FFFFFF",
     yellow: primary,
-    lightYellow: `${primary}3F`,
+    lightYellow: lightPrimary,
     darkYellow,
     transparentGray: "#C4C4C4F0",
     commonScreenBG: "#F3F3F3",
+    check: "#0B60B0",
+    transparent: "transparent",
+    ratingStar: "#ff7f00",
+    red: "#C40C0C",
   },
   dark: {
     text: "#ECEDEE",
@@ -58,9 +63,13 @@ export const Colors = {
     orange: "#FF9D3D",
     white: "#FFFFFF",
     yellow: primary,
-    lightYellow: `${primary}3F`,
+    lightYellow: lightPrimary,
     darkYellow,
     transparentGray: "#C4C4C4F0",
     commonScreenBG: "#F3F3F3",
+    check: "#FFFFFF",
+    transparent: "transparent",
+    ratingStar: "#ff7f00",
+    red: "#C40C0C",
   },
 };

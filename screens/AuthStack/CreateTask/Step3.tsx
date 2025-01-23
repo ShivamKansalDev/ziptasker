@@ -94,7 +94,6 @@ const Step3: React.FC = () => {
       <ThemedText
         style={[
           {
-            lineHeight: -1,
             fontFamily: "SquadaOne_400Regular",
             color: Colors[theme]["iconColor"],
             fontSize: fontSizeH2().fontSize + 4,
@@ -128,7 +127,7 @@ const Step3: React.FC = () => {
             multiline
             numberOfLines={5}
             placeholder="Write a summary of the key details"
-            placeholderTextColor={Colors[theme]["darkGray"]}
+            placeholderTextColor={"darkGray"}
             style={{
               flex: 1,
               borderWidth: 0,

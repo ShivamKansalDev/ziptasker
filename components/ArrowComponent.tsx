@@ -4,6 +4,7 @@ import {
   StyleProp,
   TextStyle,
   TouchableOpacity,
+  TouchableOpacityProps,
   View,
   ViewStyle,
 } from "react-native";
@@ -11,7 +12,7 @@ import { PostComponent } from "./PostComponent";
 import { getWidthnHeight } from "./width";
 import { ThemedMaterialIcons } from "./ThemedMaterialIcon";
 
-type ArrowComponentProps = {
+type ArrowComponentProps = TouchableOpacityProps & {
   title: string;
   subtitle?: string;
   time?: string | null;
@@ -29,9 +30,11 @@ const ArrowComponent: React.FC<ArrowComponentProps> = ({
   titleStyle,
   subtitleStyle,
   icon,
+  onPress,
 }) => {
   return (
     <TouchableOpacity
+      onPress={onPress}
       activeOpacity={0.5}
       style={{
         flex: 1,

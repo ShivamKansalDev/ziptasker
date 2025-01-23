@@ -14,7 +14,7 @@ import { Colors } from "../../constants/Colors";
 const Notifications: React.FC = () => {
   const theme = useColorScheme() ?? "light";
   return (
-    <ThemedSafe style={{ flex: 1 }}>
+    <ThemedView style={{ flex: 1 }}>
       <ThemedView
         style={{ flex: 1, paddingHorizontal: getWidthnHeight(3)?.width }}
       >
@@ -46,7 +46,7 @@ const Notifications: React.FC = () => {
           />
         </View>
       </ThemedView>
-    </ThemedSafe>
+    </ThemedView>
   );
 };
 

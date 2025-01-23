@@ -26,10 +26,6 @@ function LoginPage() {
   const dispatch = useDispatch();
   const navigation = useNavigation<NavigationProp>();
 
-  useEffect(() => {
-    console.log("$$$$ LOGIN PAGE");
-  }, []);
-
   return (
     <ThemedSafe style={{ flex: 1, alignItems: "center" }}>
       <ThemedView>
@@ -46,9 +42,13 @@ function LoginPage() {
           style={{
             fontFamily: "DancingScript_700Bold",
             // fontFamily: "Cookie_400Regular",
-            fontSize: fontSizeH3().fontSize + 15,
-            lineHeight: -1,
+            fontSize: fontSizeH3().fontSize,
             textAlign: "center",
+            transform: [
+              {
+                scale: 1.5,
+              },
+            ],
           }}
         >
           Zip Tasker

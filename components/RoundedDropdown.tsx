@@ -1,5 +1,11 @@
 import React from "react";
-import { ButtonProps, TextStyle, Button, TouchableOpacity } from "react-native";
+import {
+  ButtonProps,
+  TextStyle,
+  ViewStyle,
+  StyleProp,
+  TouchableOpacity,
+} from "react-native";
 import { ThemedView } from "./ThemedView";
 import { ThemedText } from "./ThemedText";
 import { ThemedMaterialIcons } from "./ThemedMaterialIcon";
@@ -10,7 +16,8 @@ import { getWidthnHeight } from "./width";
 type RoundedDropdownProps = ButtonProps & {
   lightColor?: string;
   darkColor?: string;
-  style?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  titleStyle?: TextStyle;
   onPress?: () => void;
   iconSize?: number | null;
 };
@@ -22,6 +29,7 @@ const RoundedDropdown: React.FC<RoundedDropdownProps> = ({
   darkColor,
   iconSize = getWidthnHeight(6)?.width,
   onPress,
+  titleStyle,
   ...otherProps
 }) => {
   const color = useThemeColor(
@@ -43,7 +51,7 @@ const RoundedDropdown: React.FC<RoundedDropdownProps> = ({
         style,
       ]}
     >
-      <ThemedText style={{ borderWidth: 0, borderColor: "red" }}>
+      <ThemedText style={[{ borderWidth: 0, borderColor: "red" }, titleStyle]}>
         {title}
       </ThemedText>
       {iconSize && (

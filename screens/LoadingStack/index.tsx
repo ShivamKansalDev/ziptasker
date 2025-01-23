@@ -24,26 +24,33 @@ import { View, Text, ActivityIndicator } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+// import firebase from "@react-native-firebase/app";
 
 import { ThemedSafe } from "../../components/ThemedSafe";
 import { authActions } from "../../redux/slice/auth";
 
-export const firebaseConfig = {
-  apiKey: "AIzaSyAAla8ykZ_GUQlNcMNcob42vpyvj9SL9xs",
-  authDomain: "zip-tasker.firebaseapp.com",
-  databaseURL: "https://zip-tasker.firebaseio.com",
-  projectId: "zip-tasker",
-  storageBucket: "zip-tasker.appspot.com",
-  messagingSenderId: "533861704598",
-  appId: "1:533861704598:android:b15a1939491d0f5176f3b7",
-  // measurementId: 'G-measurement-id'
-};
+// Set Firestore host for the specific region
+// firestore().settings({
+//   host: "eur3-firestore.googleapis.com",
+//   ssl: true, // Ensure SSL is enabled
+//   cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED, // Optional: Set unlimited cache size
+// });
 
-const app = initializeApp(firebaseConfig);
+// export const firebaseConfig = {
+//   apiKey: "AIzaSyArPtE4wvv9jhhWjzwHpSb3Y1GpEiCZBoc",
+//   authDomain: "taskermanager.firebaseapp.com",
+//   databaseURL: "https://taskermanager.firebaseio.com",
+//   projectId: "taskermanager",
+//   storageBucket: "taskermanager.appspot.com",
+//   messagingSenderId: "1041321032917",
+//   appId: "1:1041321032917:android:d83f90fbf2b7acc803f65c",
+//   // measurementId: 'G-measurement-id'
+// };
 
-export const auth = getAuth(app);
+// if (!firebase.apps.length) {
+//   firebase.initializeApp(firebaseConfig);
+// }
 
 SplashScreen.preventAutoHideAsync();
 

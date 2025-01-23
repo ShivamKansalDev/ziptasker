@@ -10,7 +10,8 @@ import {
   Alert,
 } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
-import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
+import auth from "@react-native-firebase/auth";
+// import { PhoneAuthProvider, signInWithCredential } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StackScreenProps } from "@react-navigation/stack";
 import { useDispatch } from "react-redux";
@@ -28,7 +29,6 @@ import { Colors } from "../../constants/Colors";
 import { NextIconButton } from "../../components/Buttons/RoundButton";
 import { LoginTypesStackParamList } from ".";
 import { authActions } from "../../redux/slice/auth";
-import { auth } from "../LoadingStack/index";
 
 type OtpVerifyProps = StackScreenProps<LoginTypesStackParamList, "otpVerify">;
 
@@ -51,11 +51,16 @@ const OtpVerify: React.FC<OtpVerifyProps> = ({ route, navigation }) => {
     Keyboard.dismiss();
     if (verificationId && !!otp && otp.length === CELL_COUNT) {
       try {
-        const credential = PhoneAuthProvider.credential(verificationId, otp);
-        await signInWithCredential(auth, credential);
+        const credential = auth.PhoneAuthProvider.credential(
+          verificationId,
+          otp
+        );
+        const response = await auth().signInWithCredential(credential);
         const data = {
           name: "Shivam Kansal",
+          details: response,
         };
+        // console.log("^^^ RESPONSE: ", JSON.stringify(data, null, 4));
         AsyncStorage.setItem("userData", JSON.stringify(data));
         dispatch(authActions.setIsLoggedIn(true));
         dispatch(authActions.setUserDetails(JSON.stringify(data)));
@@ -172,12 +177,12 @@ const styles = StyleSheet.create({
   titleStyle: {
     fontSize: fontSizeH2().fontSize + 8,
     fontFamily: "Cookie_400Regular",
-    lineHeight: -1,
+    // lineHeight: -1,
   },
   subTitleStyle: {
     fontSize: fontSizeH4().fontSize,
     fontFamily: "Inter_400Regular",
-    lineHeight: -1,
+    // lineHeight: -1,
   },
   container: {
     paddingHorizontal: getWidthnHeight(5)?.width,

@@ -35,7 +35,6 @@ const Step4: React.FC = () => {
       <ThemedText
         style={[
           {
-            lineHeight: -1,
             fontFamily: "SquadaOne_400Regular",
             color: Colors[theme]["iconColor"],
             fontSize: fontSizeH2().fontSize + 4,
@@ -78,11 +77,12 @@ const Step4: React.FC = () => {
               />
             }
             placeholder="Enter budget"
-            placeholderTextColor={Colors[theme]["darkGray"]}
+            placeholderTextColor={"darkGray"}
             style={{
               flex: 1,
               borderWidth: 0,
               paddingHorizontal: getWidthnHeight(2)?.width,
+              marginVertical: getWidthnHeight(2)?.width,
               marginHorizontal: getWidthnHeight(1)?.width,
               fontSize: fontSizeH4().fontSize + 4,
             }}
