@@ -5,8 +5,10 @@ import {
   Image,
   FlatList,
   StyleSheet,
+  StyleProp,
+  ViewStyle,
+  TouchableOpacity,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 
 import { JobTypeBox } from "../../../components/JobTypeBox";
 import { Colors } from "../../../constants/Colors";
@@ -24,41 +26,43 @@ import { IconTextInput } from "../../../components/IconTextInput";
 import { ThemedIonicons } from "../../../components/ThemedIonicons";
 import { AddImageButton } from "../../../components/Buttons/AddImageButton";
 import { ThemedView } from "../../../components/ThemedView";
+import { ThemedAntDesign } from "../../../components/ThemedAntDesign";
 
 interface ImageContainerProps {
   uri: string;
+  index: number;
 }
 
-const Step3: React.FC = () => {
+type Step3Props = {
+  details: string | undefined;
+  images: any[] | undefined;
+  setDetails: (value: string) => void;
+  setImages: (data: any) => void;
+  submitStep3: boolean;
+  onPress?: () => void;
+};
+
+const Step3: React.FC<Step3Props> = ({
+  details,
+  images = [],
+  setDetails,
+  setImages,
+  submitStep3,
+  onPress,
+}) => {
   const theme = useColorScheme() ?? "light";
-  const [details, setDetails] = useState<string | undefined>("");
-  const [images, setImages] = useState<string[] | undefined>(undefined);
 
-  const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      aspect: [4, 3],
-      quality: 0.5,
-      selectionLimit: 5,
-    });
-
-    if (!result.canceled) {
-      const newImageUri = result.assets[0].uri;
-
-      // Use Set to ensure no duplicates
-      const updatedImages = Array.from(
-        new Set([...(images || []), newImageUri])
-      );
-
-      //   console.log("^^^ Updated IMAGES: ", updatedImages);
-      setImages(updatedImages);
+  const ImageContainer: React.FC<ImageContainerProps> = ({ uri, index }) => {
+    let containerStyle: StyleProp<ViewStyle> = {};
+    if (index === 1 || index === 5) {
+      containerStyle = {};
+    } else {
+      containerStyle = {
+        marginLeft: getWidthnHeight(3)?.width,
+      };
     }
-  };
-
-  const ImageContainer: React.FC<ImageContainerProps> = ({ uri }) => {
     return (
-      <View style={{ alignItems: "flex-end" }}>
+      <View style={[{ alignItems: "flex-end" }, containerStyle]}>
         <ThemedView
           style={[
             {
@@ -78,12 +82,33 @@ const Step3: React.FC = () => {
           />
         </ThemedView>
         <View style={[StyleSheet.absoluteFillObject]}>
-          <ThemedIonicons
-            colorType={"iconColor"}
-            name={"close-circle"}
-            size={getWidthnHeight(8)?.width}
-            style={{}}
-          />
+          <TouchableOpacity
+            activeOpacity={0.6}
+            onPress={() => {
+              const updateImages = images.filter(
+                (item, subIndex) => subIndex !== index - 1
+              );
+              setImages(updateImages);
+            }}
+          >
+            <ThemedView
+              colorType={"buttonBorder"}
+              style={{
+                width: getWidthnHeight(6)?.width,
+                height: getWidthnHeight(6)?.width,
+                borderRadius: getWidthnHeight(4)?.width,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ThemedAntDesign
+                lightColor={Colors.light.white}
+                darkColor={Colors.dark.black}
+                name={"close"}
+                size={getWidthnHeight(4)?.width}
+              />
+            </ThemedView>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -121,16 +146,16 @@ const Step3: React.FC = () => {
 
         <View style={[getMarginTop(1.5)]}>
           <IconTextInput
+            showClearIcon={false}
             value={details}
             onChangeText={(text) => setDetails(text.trimStart())}
             icon={null}
             multiline
             numberOfLines={5}
             placeholder="Write a summary of the key details"
-            placeholderTextColor={"darkGray"}
+            placeholderTextColor={submitStep3 && !details ? "red" : "darkGray"}
             style={{
               flex: 1,
-              borderWidth: 0,
               height: getWidthnHeight(32)?.width,
               textAlignVertical: "top",
               paddingHorizontal: getWidthnHeight(0)?.width,
@@ -157,15 +182,17 @@ const Step3: React.FC = () => {
           (optional)
         </ThemedText>
       </View>
-      <View style={[getMarginTop(3)]}>
+      <View style={[{ borderWidth: 0, width: "100%" }, getMarginTop(3)]}>
         <FlatList
           data={images}
           keyExtractor={(item) => item}
-          numColumns={3}
-          ListFooterComponent={() => <AddImageButton onPress={pickImage} />}
-          renderItem={({ item }) => {
-            console.log("@@@ ITEM: ", item);
-            return <ImageContainer uri={item} />;
+          numColumns={4}
+          ListFooterComponent={() =>
+            images.length < 8 && <AddImageButton onPress={onPress} />
+          }
+          renderItem={({ item, index }) => {
+            // console.log("@@@ ITEM: ", item);
+            return <ImageContainer index={index + 1} uri={item} />;
           }}
         />
       </View>

@@ -29,7 +29,7 @@ type Step2Props = {
   selected: number;
   setSelected: (value: number) => void;
   selectedLocation: Place | null;
-  setSelectedLocation: (details: Place) => void;
+  setSelectedLocation: (details: Place | null) => void;
   submitStep2: boolean;
   openBottomSheet: () => void;
 };
@@ -126,6 +126,7 @@ const Step2: React.FC<Step2Props> = ({
                 onPress={() => {
                   if (selected == 1) {
                     setSelected(2);
+                    setSelectedLocation(null);
                   }
                 }}
                 style={{

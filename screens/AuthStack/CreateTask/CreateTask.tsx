@@ -11,6 +11,7 @@ import {
   Keyboard,
   TextInput,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import * as _ from "lodash";
 import moment from "moment";
 import axios from "axios";
@@ -50,6 +51,11 @@ import { IconTextInput } from "../../../components/IconTextInput";
 import { ThemedEvilIcons } from "../../../components/ThemedEvilicons";
 import { LocationTile } from "../../../components/LocationTile";
 import { ThemedMaterialIcons } from "../../../components/ThemedMaterialIcon";
+import { CloseButtonBS } from "../../../components/CloseButtonBS";
+import { TaskDetailsTile } from "../../../components/TaskDetailsTile";
+import { ThemedFontAwesome } from "../../../components/ThemedFontAwesome";
+import { ThemedFoundation } from "../../../components/ThemedFoundation";
+import { ThemedFontAwesome6 } from "../../../components/ThemedFontAwesome6";
 
 type CreateTaskRouteProp = RouteProp<DrawerStackParamList, "createTask">;
 
@@ -72,6 +78,8 @@ export type LocationDetails = {
 };
 
 const GOOGLE = "google";
+const PHOTO = "photo";
+const CAMERA = "camera";
 
 const CreateTask: React.FC = () => {
   const currentTimeStamp = moment().valueOf();
@@ -91,18 +99,29 @@ const CreateTask: React.FC = () => {
   const [taskTitle, setTaskTitle] = useState<string | undefined>(undefined);
   const [certainTime, setCertainTime] = useState<string | null>(null);
 
+  // STEP 1 STATE
   const [step1Error, setStep1Error] = useState<boolean>(true);
   const [submitStep1, setSubmitStep1] = useState<boolean>(false);
   const [step1DateError, setStep1DateError] = useState<boolean>(true);
 
+  // STEP 2 STATE
   const [selected, setSelected] = useState<number>(1);
   const [selectedLocation, setSelectedLocation] = useState<Place | null>(null);
   const [searchText, setSearchText] = useState<string | undefined>("");
   const [locations, setLocations] = useState<LocationDetails[]>([]);
   const [submitStep2, setSubmitStep2] = useState<boolean>(false);
   const locationInputRef = useRef<TextInput>(null);
-
   const googleSearchRef = useRef<BottomSheetModal>(null);
+
+  // STEP 3 STATE
+  const [details, setDetails] = useState<string | undefined>("");
+  const [images, setImages] = useState<any | undefined>(undefined);
+  const [submitStep3, setSubmitStep3] = useState<boolean>(false);
+  const photoRef = useRef<BottomSheetModal>(null);
+
+  // STEP 4 STATE
+  const [budget, setBudget] = useState<string | undefined>("");
+  const [submitStep4, setSubmitStep4] = useState<boolean>(false);
 
   const timeOfDay = [
     {
@@ -155,6 +174,12 @@ const CreateTask: React.FC = () => {
     },
   ];
 
+  const listing = [
+    { id: "1", title: "Take a photo" },
+    { id: "2", title: "Choose photo(s)" },
+    { id: "3", title: "Cancel" },
+  ];
+
   async function getCurrentLocation() {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -198,12 +223,16 @@ const CreateTask: React.FC = () => {
     if (type === GOOGLE) {
       console.log("@@@ CALL");
       googleSearchRef.current?.present();
+    } else if (type === PHOTO) {
+      photoRef.current?.present();
     }
   }
 
   function closeBottomSheet(type = GOOGLE) {
     if (type === GOOGLE) {
       googleSearchRef.current?.close();
+    } else if (type === PHOTO) {
+      photoRef.current?.close();
     }
   }
 
@@ -302,6 +331,39 @@ const CreateTask: React.FC = () => {
     }
   }
 
+  const pickImage = async (type = PHOTO) => {
+    // No permissions request is necessary for launching the image library
+    let result: ImagePicker.ImagePickerResult;
+    if (type === PHOTO) {
+      result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        aspect: [4, 3],
+        quality: 0.5,
+        selectionLimit: 5,
+      });
+    } else {
+      result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+        selectionLimit: 1,
+      });
+    }
+
+    if (!result.canceled) {
+      const newImageUri = result.assets[0].uri;
+
+      // Use Set to ensure no duplicates
+      const updatedImages = Array.from(
+        new Set([...(images || []), newImageUri])
+      );
+
+      //   console.log("^^^ Updated IMAGES: ", updatedImages);
+      setImages(updatedImages);
+    }
+  };
+
   return (
     <ThemedSafe style={{ flex: 1 }}>
       {theme === "light" && (
@@ -328,11 +390,16 @@ const CreateTask: React.FC = () => {
           />
         </View>
       )}
-      <ThemedText
-        style={[{ paddingHorizontal: getWidthnHeight(4)?.width }, fontSizeH4()]}
-      >
-        {`STEP ${step}/4`}
-      </ThemedText>
+      {step < 5 && (
+        <ThemedText
+          style={[
+            { paddingHorizontal: getWidthnHeight(4)?.width },
+            fontSizeH4(),
+          ]}
+        >
+          {`STEP ${step}/4`}
+        </ThemedText>
+      )}
       <View
         style={{
           borderWidth: 0,
@@ -665,8 +732,167 @@ const CreateTask: React.FC = () => {
             openBottomSheet={() => openBottomSheet()}
           />
         )}
-        {step === 3 && <Step3 />}
-        {step === 4 && <Step4 />}
+        {step === 3 && (
+          <Step3
+            details={details}
+            images={images}
+            setDetails={setDetails}
+            setImages={setImages}
+            submitStep3={submitStep3}
+            onPress={() => openBottomSheet(PHOTO)}
+          />
+        )}
+        {step === 4 && (
+          <Step4
+            budget={budget}
+            setBudget={setBudget}
+            submitStep4={submitStep4}
+          />
+        )}
+        {step === 5 && (
+          <View style={[{ flex: 1 }]}>
+            <ThemedText
+              style={[
+                {
+                  // lineHeight: -1,
+                  fontFamily: "SquadaOne_400Regular",
+                  color: Colors[theme]["iconColor"],
+                  fontSize: fontSizeH2().fontSize + 4,
+                },
+                // fontSizeH2(),
+              ]}
+            >
+              Alright, ready to get offers?
+            </ThemedText>
+            <View style={[getMarginTop(1)]}>
+              <ThemedText
+                style={[
+                  { fontSize: fontSizeH4().fontSize + 4, fontWeight: "500" },
+                ]}
+              >
+                Post the task when you're ready
+              </ThemedText>
+            </View>
+            <TaskDetailsTile
+              title={taskTitle}
+              onPress={() => setStep(1)}
+              leftIcon={
+                <ThemedMaterialCommunityIcons
+                  name="clipboard-text-outline"
+                  size={getWidthnHeight(6)?.width}
+                  lightColor={Colors.light.iconColor}
+                  darkColor={Colors.dark.white}
+                />
+              }
+              style={[
+                {
+                  shadowColor: Colors[theme]["black"],
+                  backgroundColor:
+                    theme === "light"
+                      ? Colors.light.yellow
+                      : Colors.dark.primary,
+                },
+                getMarginTop(2),
+              ]}
+            />
+            <TaskDetailsTile
+              title={
+                onDate
+                  ? `On ${onDate}`
+                  : beforeDate
+                  ? `Before ${beforeDate}`
+                  : flexibleTimings
+                  ? "I'm flexible"
+                  : ""
+              }
+              onPress={() => setStep(1)}
+              leftIcon={
+                <ThemedMaterialCommunityIcons
+                  name={"calendar-text"}
+                  size={getWidthnHeight(6)?.width}
+                  lightColor={Colors.light.iconColor}
+                  darkColor={Colors.dark.white}
+                />
+              }
+              style={[
+                {
+                  shadowColor: Colors[theme]["black"],
+                  backgroundColor:
+                    theme === "light"
+                      ? Colors.light.yellow
+                      : Colors.dark.primary,
+                },
+                getMarginTop(2),
+              ]}
+            />
+            <TaskDetailsTile
+              title={selected === 1 ? selectedLocation?.description : "Online"}
+              onPress={() => setStep(2)}
+              leftIcon={
+                <ThemedIonicons
+                  name={"location-outline"}
+                  size={getWidthnHeight(6)?.width}
+                  lightColor={Colors.light.iconColor}
+                  darkColor={Colors.dark.white}
+                />
+              }
+              style={[
+                {
+                  shadowColor: Colors[theme]["black"],
+                  backgroundColor:
+                    theme === "light"
+                      ? Colors.light.yellow
+                      : Colors.dark.primary,
+                },
+                getMarginTop(2),
+              ]}
+            />
+            <TaskDetailsTile
+              title={details}
+              onPress={() => setStep(3)}
+              leftIcon={
+                <ThemedFontAwesome
+                  name={"tasks"}
+                  size={getWidthnHeight(6)?.width}
+                  lightColor={Colors.light.iconColor}
+                  darkColor={Colors.dark.white}
+                />
+              }
+              style={[
+                {
+                  shadowColor: Colors[theme]["black"],
+                  backgroundColor:
+                    theme === "light"
+                      ? Colors.light.yellow
+                      : Colors.dark.primary,
+                },
+                getMarginTop(2),
+              ]}
+            />
+            <TaskDetailsTile
+              title={budget}
+              onPress={() => setStep(4)}
+              leftIcon={
+                <ThemedFontAwesome6
+                  name={"dollar"}
+                  size={getWidthnHeight(6)?.width}
+                  lightColor={Colors.light.iconColor}
+                  darkColor={Colors.dark.white}
+                />
+              }
+              style={[
+                {
+                  shadowColor: Colors[theme]["black"],
+                  backgroundColor:
+                    theme === "light"
+                      ? Colors.light.yellow
+                      : Colors.dark.primary,
+                },
+                getMarginTop(2),
+              ]}
+            />
+          </View>
+        )}
       </View>
       <View>
         {step === 1 && (
@@ -692,7 +918,7 @@ const CreateTask: React.FC = () => {
             style={{ borderWidth: 0 }}
           />
         )}
-        {step > 1 && (
+        {step > 1 && step < 5 && (
           <View style={[]}>
             <View
               style={[
@@ -710,17 +936,27 @@ const CreateTask: React.FC = () => {
                 darkColor={Colors[theme]["yellow"]}
                 title="Back"
                 onPress={() => setStep(step - 1)}
-                style={{ borderWidth: 0, width: step < 4 ? "50%" : "100%" }}
+                style={{ borderWidth: 0, width: "50%" }}
               />
-              {step < 4 && (
+              {step <= 5 && (
                 <FlatButton
                   lightColor={Colors[theme]["yellow"]}
                   darkColor={Colors[theme]["yellow"]}
-                  title="Next"
+                  title={"Next"}
                   onPress={() => {
                     if (step === 2) {
                       setSubmitStep2(true);
                       if (selectedLocation) {
+                        setStep(step + 1);
+                      }
+                    } else if (step === 3) {
+                      setSubmitStep3(true);
+                      if (details) {
+                        setStep(step + 1);
+                      }
+                    } else if (step === 4) {
+                      setSubmitStep4(true);
+                      if (budget) {
                         setStep(step + 1);
                       }
                     }
@@ -736,6 +972,16 @@ const CreateTask: React.FC = () => {
             </View>
           </View>
         )}
+        {step === 5 && (
+          <FlatButton
+            lightColor={Colors[theme]["yellow"]}
+            darkColor={Colors[theme]["yellow"]}
+            title="Post task"
+            onPress={() => {}}
+            style={{ borderWidth: 0, width: "100%" }}
+          />
+        )}
+        {/* Google Places Bottom Sheet */}
         <CustomBS
           ref={googleSearchRef}
           onOpen={focusLocationInput}
@@ -747,23 +993,7 @@ const CreateTask: React.FC = () => {
           }}
           handleComponent={() => (
             <View style={[{ alignItems: "center" }, getMarginTop(-7)]}>
-              <View
-                style={{
-                  width: getWidthnHeight(10)?.width,
-                  height: getWidthnHeight(10)?.width,
-                  borderRadius: getWidthnHeight(5)?.width,
-                  backgroundColor: "rgba(0, 0, 0, 0.6)",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ThemedAntDesign
-                  name={"close"}
-                  onPress={() => closeBottomSheet()}
-                  colorType={"white"}
-                  size={getWidthnHeight(6)?.width}
-                />
-              </View>
+              <CloseButtonBS onPress={() => closeBottomSheet()} />
             </View>
           )}
         >
@@ -868,6 +1098,50 @@ const CreateTask: React.FC = () => {
                 />
               </View>
             </View>
+          </View>
+        </CustomBS>
+
+        {/* Attachment Bottom Sheet */}
+        <CustomBS
+          ref={photoRef}
+          snapPoints={["25%"]}
+          bsStyle={{
+            borderTopLeftRadius: getWidthnHeight(5)?.width,
+            borderTopRightRadius: getWidthnHeight(5)?.width,
+          }}
+          handleComponent={() => (
+            <View style={[{ alignItems: "center" }, getMarginTop(-7)]}>
+              <CloseButtonBS onPress={() => closeBottomSheet()} />
+            </View>
+          )}
+        >
+          <View>
+            {listing.map((item, index) => {
+              return (
+                <TouchableOpacity
+                  key={`list${item.id}`}
+                  style={{ borderColor: "red", borderWidth: 0 }}
+                  onPress={() => {
+                    if (item.id === "1") {
+                      pickImage(CAMERA);
+                    } else if (item.id === "2") {
+                      pickImage(PHOTO);
+                    }
+                    closeBottomSheet(PHOTO);
+                  }}
+                >
+                  <ThemedText
+                    style={{
+                      color: Colors[theme]["buttonBorder"],
+                      fontSize: fontSizeH4().fontSize + 3,
+                      padding: getWidthnHeight(5)?.width,
+                    }}
+                  >
+                    {item.title}
+                  </ThemedText>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </CustomBS>
       </View>

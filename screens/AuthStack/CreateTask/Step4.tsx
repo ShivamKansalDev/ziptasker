@@ -26,9 +26,14 @@ import { AddImageButton } from "../../../components/Buttons/AddImageButton";
 import { ThemedView } from "../../../components/ThemedView";
 import { ThemedFontAwesome6 } from "../../../components/ThemedFontAwesome6";
 
-const Step4: React.FC = () => {
+type Step4Props = {
+  budget: string | undefined;
+  submitStep4: boolean;
+  setBudget: (value: string) => void;
+};
+
+const Step4: React.FC<Step4Props> = ({ budget, submitStep4, setBudget }) => {
   const theme = useColorScheme() ?? "light";
-  const [budget, setBudget] = useState<string | undefined>("");
 
   return (
     <View style={{ flex: 1 }}>
@@ -68,7 +73,9 @@ const Step4: React.FC = () => {
         <View style={[getMarginTop(1.5)]}>
           <IconTextInput
             value={budget}
-            onChangeText={(text) => setBudget(text.trimStart())}
+            keyboardType={"numeric"}
+            onChangeText={(text) => setBudget(text.replace(/[^0-9]/g, ""))}
+            onClear={() => setBudget("")}
             icon={
               <ThemedFontAwesome6
                 name={"dollar"}
@@ -87,6 +94,23 @@ const Step4: React.FC = () => {
               fontSize: fontSizeH4().fontSize + 4,
             }}
           />
+          {submitStep4 && !budget && (
+            <View style={[{ zIndex: -1 }, getMarginTop(1)]}>
+              <ThemedText
+                style={{
+                  position: "absolute",
+                  color: Colors[theme]["red"],
+                  fontSize: fontSizeH4().fontSize - 1,
+                  backgroundColor:
+                    theme === "light"
+                      ? Colors.light.white
+                      : Colors.dark.transparent,
+                }}
+              >
+                *Budget is required
+              </ThemedText>
+            </View>
+          )}
         </View>
       </View>
     </View>

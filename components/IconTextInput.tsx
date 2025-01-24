@@ -16,6 +16,7 @@ import { Colors } from "../constants/Colors";
 import { ThemedAntDesign } from "./ThemedAntDesign";
 
 type IconTextInputProps = TextInputProps & {
+  showClearIcon?: boolean;
   lightColor?: string;
   darkColor?: string;
   icon?: ReactNode;
@@ -28,6 +29,7 @@ type IconTextInputProps = TextInputProps & {
 const IconTextInput = forwardRef<TextInput, IconTextInputProps>(
   (
     {
+      showClearIcon = true,
       icon,
       style,
       lightColor,
@@ -68,7 +70,7 @@ const IconTextInput = forwardRef<TextInput, IconTextInputProps>(
           style={style}
           {...otherProps}
         />
-        {value && (
+        {showClearIcon && value && (
           <View style={{ borderWidth: 0 }}>
             <ThemedAntDesign
               name={"closecircle"}
