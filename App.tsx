@@ -17,6 +17,7 @@ import { RootState, store } from "./redux/store";
 import LoadingStack from "./screens/LoadingStack";
 import NoAuthStackNavigator from "./screens/NoAuthStack";
 import AuthStackNavigator from "./screens/AuthStack";
+import { StatusBar } from "expo-status-bar";
 
 export default function App() {
   const colorScheme = useColorScheme();
@@ -29,6 +30,7 @@ export default function App() {
     );
     return (
       <SafeAreaProvider>
+        <StatusBar style="dark" />
         <NavigationContainer>
           <BottomSheetModalProvider>
             {isLoggedIn == null && <LoadingStack />}

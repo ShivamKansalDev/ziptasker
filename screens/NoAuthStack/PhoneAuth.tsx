@@ -88,7 +88,7 @@ function PhoneAuth() {
               style={[
                 {
                   fontFamily: "Cookie_400Regular",
-                  fontSize: fontSizeH2().fontSize,
+                  fontSize: fontSizeH2().fontSize + 8,
                   textAlignVertical: "center",
                   textAlign: "left",
                 },
