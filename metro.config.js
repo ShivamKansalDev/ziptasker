@@ -1,3 +1,11 @@
 const { getDefaultConfig } = require("expo/metro-config");
 
-module.exports = getDefaultConfig(__dirname);
+const config = {
+  resolver: {
+    assetExts: [...defaultConfig.resolver.assetExts, "lottie"],
+  },
+};
+
+const defaultConfig = getDefaultConfig(__dirname, config);
+
+module.exports = defaultConfig;
