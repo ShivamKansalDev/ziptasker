@@ -57,7 +57,7 @@ type CustomBrowseStackNavProp = StackNavigationProp<
   BrowseTasksNavigatorParamsList,
   "taskDetails"
 >;
-type CustomPrimaryStackNavProp = StackNavigationProp<
+export type CustomPrimaryStackNavProp = StackNavigationProp<
   PrimaryStackParamList,
   "pvtMessage"
 >;

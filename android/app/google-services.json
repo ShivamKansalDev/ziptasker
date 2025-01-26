@@ -3,7 +3,7 @@
     "project_number": "1041321032917",
     "firebase_url": "https://taskermanager-default-rtdb.firebaseio.com",
     "project_id": "taskermanager",
-    "storage_bucket": "taskermanager.firebasestorage.app"
+    "storage_bucket": "taskermanager.appspot.com"
   },
   "client": [
     {

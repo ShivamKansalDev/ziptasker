@@ -35,7 +35,7 @@ interface ImageContainerProps {
 
 type Step3Props = {
   details: string | undefined;
-  images: any[] | undefined;
+  images: string[];
   setDetails: (value: string) => void;
   setImages: (data: any) => void;
   submitStep3: boolean;

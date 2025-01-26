@@ -63,9 +63,10 @@ const DummyTextInput: React.FC<DummyTextInputProps> = ({
         {icon && <View style={{ borderWidth: 0 }}>{icon}</View>}
         {value ? (
           <ThemedText
+            numberOfLines={1}
             style={{
               fontSize: fontSizeH4().fontSize + 4,
-              paddingLeft: getWidthnHeight(2)?.width,
+              paddingHorizontal: getWidthnHeight(2)?.width,
             }}
             colorType={"black"}
           >

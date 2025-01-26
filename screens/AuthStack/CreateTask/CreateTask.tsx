@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useRef,
+  ReactNode,
+} from "react";
 import Checkbox from "expo-checkbox";
 import {
   useColorScheme,
@@ -18,10 +24,19 @@ import axios from "axios";
 import * as Location from "expo-location";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { BottomSheetFlatList, BottomSheetModal } from "@gorhom/bottom-sheet";
+import firestore from "@react-native-firebase/firestore";
+import { utils } from "@react-native-firebase/app";
+import auth from "@react-native-firebase/auth";
+import storage from "@react-native-firebase/storage";
 
 import { ThemedView } from "../../../components/ThemedView";
 import { ThemedText } from "../../../components/ThemedText";
-import { DrawerNavProp, DrawerStackParamList } from "..";
+import {
+  CustomPrimaryStackNavProp,
+  DrawerNavProp,
+  DrawerStackParamList,
+  PrimaryStackParamList,
+} from "..";
 import {
   fontSizeH2,
   fontSizeH3,
@@ -57,7 +72,7 @@ import { ThemedFontAwesome } from "../../../components/ThemedFontAwesome";
 import { ThemedFoundation } from "../../../components/ThemedFoundation";
 import { ThemedFontAwesome6 } from "../../../components/ThemedFontAwesome6";
 
-type CreateTaskRouteProp = RouteProp<DrawerStackParamList, "createTask">;
+type CreateTaskRouteProp = RouteProp<PrimaryStackParamList, "createTask">;
 
 const totalSteps = 4;
 
@@ -77,6 +92,27 @@ export type LocationDetails = {
   place_id: string | undefined;
 };
 
+type TimeOfDayProps = {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon?: ReactNode;
+};
+
+type SaveDetailsProps = {
+  title: string | undefined;
+  on_date: string | null;
+  before_date: string | null;
+  flexible_date: boolean;
+  certain_time: TimeOfDayProps | undefined | null;
+  online_job: boolean;
+  location: Place | null;
+  task_details: string | undefined;
+  images: string[];
+  budget: string | undefined;
+  status: string;
+};
+
 const GOOGLE = "google";
 const PHOTO = "photo";
 const CAMERA = "camera";
@@ -84,7 +120,7 @@ const CAMERA = "camera";
 const CreateTask: React.FC = () => {
   const currentTimeStamp = moment().valueOf();
   const route = useRoute<CreateTaskRouteProp>();
-  const navigation = useNavigation<DrawerNavProp>();
+  const navigation = useNavigation<CustomPrimaryStackNavProp>();
   const theme = useColorScheme() ?? "light";
   const [step, setStep] = useState<number>(1);
 
@@ -115,7 +151,8 @@ const CreateTask: React.FC = () => {
 
   // STEP 3 STATE
   const [details, setDetails] = useState<string | undefined>("");
-  const [images, setImages] = useState<any | undefined>(undefined);
+  const [images, setImages] = useState<string[]>([]);
+  const [downloadUrl, setDownloadUrl] = useState<string[]>([]);
   const [submitStep3, setSubmitStep3] = useState<boolean>(false);
   const photoRef = useRef<BottomSheetModal>(null);
 
@@ -123,7 +160,7 @@ const CreateTask: React.FC = () => {
   const [budget, setBudget] = useState<string | undefined>("");
   const [submitStep4, setSubmitStep4] = useState<boolean>(false);
 
-  const timeOfDay = [
+  const timeOfDay: TimeOfDayProps[] = [
     {
       id: "1",
       title: "Morning",
@@ -359,8 +396,92 @@ const CreateTask: React.FC = () => {
         new Set([...(images || []), newImageUri])
       );
 
-      //   console.log("^^^ Updated IMAGES: ", updatedImages);
+      console.log("^^^ Updated IMAGES: ", updatedImages);
       setImages(updatedImages);
+    }
+  };
+
+  async function uploadImages() {
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      try {
+        const fileUri = String(image);
+        const fileName = `${moment().valueOf()}-${fileUri.split("/").pop()}`;
+        const storageRef = storage().ref(`images/${fileName}`);
+        const task = storageRef.putFile(image);
+
+        // Monitor the upload
+        task.on("state_changed", (taskSnapshot) => {
+          console.log(
+            `${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`
+          );
+        });
+
+        await task;
+
+        const url = await storageRef.getDownloadURL();
+        setDownloadUrl((prevUrls) => [...prevUrls, url]);
+        console.log("### DOWNLOAD URL: ", url);
+      } catch (error) {
+        console.error(`Error uploading: `, error);
+        // Optionally break the loop or handle errors as needed
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (downloadUrl.length === images.length && downloadUrl.length > 0) {
+      console.log("^^^ DOWNLOAD URL: ", downloadUrl);
+      compileDataObject();
+    }
+  }, [downloadUrl, images]);
+
+  function compileDataObject() {
+    const findCertainTime = timeOfDay.find((item) => item.id === certainTime);
+    delete findCertainTime?.icon;
+    const saveDetails: SaveDetailsProps = {
+      title: taskTitle,
+      on_date: onDate
+        ? moment(onDate, "ddd DD,MMM").format("DD/MM/YYYY")
+        : null,
+      before_date: beforeDate
+        ? moment(beforeDate, "ddd DD,MMM").format("DD/MM/YYYY")
+        : null,
+      flexible_date: flexibleTimings,
+      certain_time: checked ? findCertainTime : null,
+      online_job: selected === 2,
+      location: selected === 1 ? selectedLocation : null,
+      task_details: details,
+      images: downloadUrl,
+      budget: budget,
+      status: "open",
+    };
+    addTask(saveDetails);
+  }
+
+  const addTask = async (details: SaveDetailsProps) => {
+    const userId = auth().currentUser?.uid;
+
+    if (!userId) {
+      console.error("No user is signed in");
+      return;
+    }
+
+    try {
+      const tasksRef = firestore()
+        .collection("users")
+        .doc(userId)
+        .collection("tasks");
+      const newTask = {
+        ...details,
+        createdAt: firestore.FieldValue.serverTimestamp(),
+      };
+
+      const taskDoc = await tasksRef.add(newTask);
+      console.log("Task added with ID:", taskDoc.id);
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error adding task:", error);
     }
   };
 
@@ -501,7 +622,7 @@ const CreateTask: React.FC = () => {
               >
                 <View>
                   <RoundedDropdown
-                    title={onDate ?? "On date"}
+                    title={onDate ? `On ${onDate}` : "On date"}
                     onPress={() => setShowOnDate(true)}
                     titleStyle={{
                       fontSize: fontSizeH4().fontSize + (onDate ? 1 : 3),
@@ -509,7 +630,7 @@ const CreateTask: React.FC = () => {
                     style={{
                       borderWidth: 2,
                       borderColor: Colors[theme]["iconColor"],
-                      paddingHorizontal: getWidthnHeight(3)?.width,
+                      paddingHorizontal: getWidthnHeight(2)?.width,
                       paddingVertical: getWidthnHeight(1)?.width,
                       borderRadius: getWidthnHeight(10)?.width,
                       backgroundColor: onDate
@@ -529,6 +650,7 @@ const CreateTask: React.FC = () => {
                             return;
                           }
                           setFlexibleTimings(false);
+                          setBeforeDate(null);
                           const timeStamp = event.nativeEvent.timestamp;
                           setFromTimeStamp(timeStamp);
                           if (Platform.OS === "android") {
@@ -546,7 +668,7 @@ const CreateTask: React.FC = () => {
                 </View>
                 <View>
                   <RoundedDropdown
-                    title={beforeDate ?? "Before date"}
+                    title={beforeDate ? `Before ${beforeDate}` : "Before date"}
                     onPress={() => setShowBeforeDate(true)}
                     titleStyle={{
                       fontSize: fontSizeH4().fontSize + (beforeDate ? 1 : 3),
@@ -554,7 +676,7 @@ const CreateTask: React.FC = () => {
                     style={{
                       borderWidth: 2,
                       borderColor: Colors[theme]["iconColor"],
-                      paddingHorizontal: getWidthnHeight(3)?.width,
+                      paddingHorizontal: getWidthnHeight(2)?.width,
                       paddingVertical: getWidthnHeight(1)?.width,
                       borderRadius: getWidthnHeight(10)?.width,
                       backgroundColor: beforeDate
@@ -567,13 +689,17 @@ const CreateTask: React.FC = () => {
                       <DateTimePicker
                         value={moment(toTimeStamp).utc().toDate()}
                         display="default"
-                        minimumDate={moment(fromTimeStamp).utc().toDate()}
+                        minimumDate={moment(currentTimeStamp)
+                          .add(1, "day")
+                          .utc()
+                          .toDate()}
                         onChange={(event, date) => {
                           if (event.type === "dismissed") {
                             setShowBeforeDate(!showBeforeDate);
                             return;
                           }
                           setFlexibleTimings(false);
+                          setOnDate(null);
                           const timeStamp = event.nativeEvent.timestamp;
                           setToTimeStamp(timeStamp);
                           if (Platform.OS === "android") {
@@ -603,7 +729,7 @@ const CreateTask: React.FC = () => {
                     backgroundColor: flexibleTimings
                       ? Colors[theme]["yellow"]
                       : "transparent",
-                    paddingHorizontal: getWidthnHeight(3)?.width,
+                    paddingHorizontal: getWidthnHeight(2)?.width,
                     paddingVertical: getWidthnHeight(1.5)?.width,
                     borderRadius: getWidthnHeight(10)?.width,
                   }}
@@ -946,7 +1072,10 @@ const CreateTask: React.FC = () => {
                   onPress={() => {
                     if (step === 2) {
                       setSubmitStep2(true);
-                      if (selectedLocation) {
+                      if (
+                        (selected === 1 && selectedLocation) ||
+                        selected === 2
+                      ) {
                         setStep(step + 1);
                       }
                     } else if (step === 3) {
@@ -977,7 +1106,13 @@ const CreateTask: React.FC = () => {
             lightColor={Colors[theme]["yellow"]}
             darkColor={Colors[theme]["yellow"]}
             title="Post task"
-            onPress={() => {}}
+            onPress={() => {
+              if (images.length > 0) {
+                uploadImages();
+              } else {
+                compileDataObject();
+              }
+            }}
             style={{ borderWidth: 0, width: "100%" }}
           />
         )}
